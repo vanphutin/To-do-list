@@ -1,19 +1,25 @@
 import { Request, Response } from "express";
 import Task from "../models/task.model";
 import paginationHelper from "../helpers/pagination";
+import searchHelper from "../helpers/search";
 
 export const getTasks = async (req: Request, res: Response) => {
   try {
-    const search = req.query.search as string;
+    const keyword = req.query.search as string;
     const sort = req.query.sort === "desc" ? -1 : 1;
-    const find = {
+    interface Find {
+      deleted: Boolean;
+      title?: RegExp;
+    }
+    const find: Find = {
       deleted: false,
     };
-    // Build a dynamic query
-    const query: any = { deleted: false };
-    if (search) {
-      query.title = { $regex: search, $options: "i" };
+    // Search by title
+    const objectSearch = searchHelper(req.query);
+    if (keyword) {
+      find.title = objectSearch.regex;
     }
+
     // Pagination setup
     let initPagination = {
       currentPage: 1,
@@ -26,15 +32,18 @@ export const getTasks = async (req: Request, res: Response) => {
       countProducts
     );
     // Fetch tasks from the database with sorting
-    const tasks = await Task.find(query)
+    const tasks = await Task.find(find)
       .sort({ title: sort })
       .limit(pagination.limitItems)
       .skip(pagination.skip ?? 0);
 
     res.status(200).json({ message: "Successful!", data: tasks });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error fetching tasks", error });
+    console.error((error as Error).message);
+    res.status(500).json({
+      message: "Error fetching tasks",
+      error: (error as Error).message || error,
+    });
   }
 };
 
