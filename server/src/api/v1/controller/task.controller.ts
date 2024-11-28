@@ -55,3 +55,22 @@ export const getTasksDetail = async (req: Request, res: Response) => {
   }); // Không có điều kiện "deleted: false"
   res.status(200).json({ message: "Successful !", data: tasks });
 };
+
+export const changeStatus = async (req: Request, res: Response) => {
+  const id: string = req.params.id;
+  const status: string = req.body.status;
+
+  try {
+    await Task.updateOne({ _id: id }, { status: status });
+    res.status(200).json({
+      code: 200,
+      message: "Change status success",
+    });
+  } catch (error) {
+    console.error((error as Error).message);
+    res.status(500).json({
+      message: "Error fetching tasks",
+      error: (error as Error).message || error,
+    });
+  }
+};

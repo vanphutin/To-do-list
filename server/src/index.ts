@@ -4,9 +4,10 @@ import mainRouter from "./api/v1/routers/index.router";
 dotenv.config();
 import * as database from "./config/database";
 database.connect();
-
+const bodyPaser = require("body-parser");
 const PORT: number | string = process.env.PORT || 8081;
 const app: Express = express();
+app.use(bodyPaser.json());
 
 mainRouter(app);
 app.get("/", (req: Request, res: Response) => {
